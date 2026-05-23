@@ -54,6 +54,22 @@ Rails.application.routes.draw do
 end
 ```
 
+## Required scope
+
+Every token must carry the `mcp` scope (configurable via `config.scope`). A valid, non-expired token that lacks the scope is rejected with `403 insufficient_scope` before any tool code runs. This prevents tokens issued to other parts of your app (e.g. a mobile API client) from being used to access the MCP endpoint.
+
+To issue a token with the right scope, ensure your Doorkeeper config includes it:
+
+```ruby
+# config/initializers/doorkeeper.rb
+Doorkeeper.configure do
+  optional_scopes :mcp
+  # ...
+end
+```
+
+Then request or create tokens that include the `mcp` scope. To use a different scope name, or to disable the check entirely, see [`configuration.scope`](configuration.md#scope).
+
 ## Making authenticated requests
 
 Include the token in the `Authorization` header:
@@ -83,10 +99,11 @@ curl https://your-app.com/mcp/.well-known/oauth-authorization-server
 
 | Condition | Status | Body |
 |-----------|--------|------|
-| Missing `Authorization` header | `401` | `{"error":"missing_token"}` |
+| Missing `Authorization` header | `401` | `{"error":"invalid_token"}` |
 | Token not found | `401` | `{"error":"invalid_token"}` |
 | Token revoked | `401` | `{"error":"invalid_token"}` |
 | Token expired | `401` | `{"error":"invalid_token"}` |
+| Token lacks required scope | `403` | `{"error":"insufficient_scope"}` |
 
 All `401` responses include a `WWW-Authenticate: Bearer realm="rails-mcp"` header.
 

@@ -8,7 +8,8 @@ module RailsMcp
                   :denied_models,
                   :denied_columns,
                   :max_limit,
-                  :schema_file
+                  :schema_file,
+                  :scope
 
     def initialize
       @database_role  = :reading
@@ -18,6 +19,7 @@ module RailsMcp
       @denied_columns = []
       @max_limit      = 100
       @schema_file    = nil
+      @scope          = "mcp"
     end
 
     def column_denied?(name)

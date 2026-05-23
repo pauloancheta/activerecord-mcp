@@ -105,6 +105,28 @@ config.max_limit = 50
 
 ---
 
+### `scope`
+
+**Default:** `"mcp"`
+
+The OAuth scope that every Bearer token must include. Tokens with a valid signature and expiry but without this scope are rejected with `403 insufficient_scope`. This prevents tokens issued to other clients (mobile apps, webhooks, etc.) from reaching the MCP endpoint.
+
+```ruby
+config.scope = "mcp"          # default
+config.scope = "admin:mcp"    # custom scope name
+config.scope = nil            # disable scope check entirely
+```
+
+Your Doorkeeper config must declare the scope you choose:
+
+```ruby
+Doorkeeper.configure do
+  optional_scopes :mcp
+end
+```
+
+---
+
 ### `schema_file`
 
 **Default:** `nil`

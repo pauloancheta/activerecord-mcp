@@ -51,6 +51,35 @@ class TokenValidatorTest < ActiveSupport::TestCase
     assert_equal token.id, rack_env["rails_mcp.access_token"].id
   end
 
+  test "rejects token missing required scope" do
+    token = create_valid_token(scopes: "")
+    status, _, body = app.call(env("POST", "/mcp", token: token.token))
+    assert_equal 403, status
+    assert_match "insufficient_scope", body.join
+    assert_match "mcp", body.join
+  end
+
+  test "rejects token with different scope" do
+    token = create_valid_token(scopes: "read")
+    status, headers, = app.call(env("POST", "/mcp", token: token.token))
+    assert_equal 403, status
+    assert_match "mcp", headers["WWW-Authenticate"]
+  end
+
+  test "scope check skipped when scope config is nil" do
+    RailsMcp.configuration.scope = nil
+    token = create_valid_token(scopes: "")
+    status, = app.call(env("POST", "/mcp", token: token.token))
+    assert_equal 200, status
+  end
+
+  test "scope check skipped when scope config is empty string" do
+    RailsMcp.configuration.scope = ""
+    token = create_valid_token(scopes: "")
+    status, = app.call(env("POST", "/mcp", token: token.token))
+    assert_equal 200, status
+  end
+
   private
 
   def env(method, path, token: nil)
@@ -59,12 +88,13 @@ class TokenValidatorTest < ActiveSupport::TestCase
     e
   end
 
-  def create_valid_token(expires_in: 3600)
+  def create_valid_token(expires_in: 3600, scopes: "mcp")
     app_record = Doorkeeper::Application.create!(
       name: "test-#{SecureRandom.hex(4)}",
       redirect_uri: "urn:ietf:wg:oauth:2.0:oob",
-      confidential: false
+      confidential: false,
+      scopes: "mcp read"
     )
-    Doorkeeper::AccessToken.create!(application: app_record, expires_in: expires_in)
+    Doorkeeper::AccessToken.create!(application: app_record, expires_in: expires_in, scopes: scopes)
   end
 end

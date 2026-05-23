@@ -22,6 +22,11 @@ module RailsMcp
         token = Doorkeeper::AccessToken.by_token(token_string)
         return unauthorized("Invalid or expired token") if token.nil? || token.revoked? || token.expired?
 
+        required = RailsMcp.configuration.scope
+        if required && !required.empty? && !token.scopes.include?(required)
+          return insufficient_scope(required)
+        end
+
         env["rails_mcp.access_token"] = token
         @app.call(env)
       end
@@ -36,10 +41,22 @@ module RailsMcp
       end
 
       def unauthorized(message)
-        body = { error: "unauthorized", error_description: message }.to_json
+        body = { error: "invalid_token", error_description: message }.to_json
         [
           401,
           { "Content-Type" => "application/json", "WWW-Authenticate" => 'Bearer realm="rails-mcp"' },
+          [body]
+        ]
+      end
+
+      def insufficient_scope(scope)
+        body = { error: "insufficient_scope", error_description: "Token missing required scope: #{scope}" }.to_json
+        [
+          403,
+          {
+            "Content-Type"    => "application/json",
+            "WWW-Authenticate" => "Bearer realm=\"rails-mcp\", error=\"insufficient_scope\", scope=\"#{scope}\""
+          },
           [body]
         ]
       end
