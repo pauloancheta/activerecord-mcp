@@ -1,6 +1,6 @@
 # activerecord-mcp
 
-[![CI](https://github.com/pauloancheta/rails-mcp/actions/workflows/main.yml/badge.svg)](https://github.com/pauloancheta/rails-mcp/actions/workflows/main.yml)
+[![CI](https://github.com/pauloancheta/activerecord-mcp/actions/workflows/main.yml/badge.svg)](https://github.com/pauloancheta/activerecord-mcp/actions/workflows/main.yml)
 
 The read-only MCP server Rails developers have been looking for.
 
@@ -130,4 +130,4 @@ bundle install
 bundle exec rake test
 ```
 
-Bug reports and pull requests welcome at https://github.com/pauloancheta/rails-mcp.
+Bug reports and pull requests welcome at https://github.com/pauloancheta/activerecord-mcp.

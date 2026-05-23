@@ -12,7 +12,7 @@ Gem::Specification.new do |spec|
   spec.description = "A Rails Engine that implements a Model Context Protocol (MCP) server using " \
                      "HTTP-only Streamable HTTP transport. Provides built-in ActiveRecord query tools " \
                      "with configurable database roles, field filtering, and OAuth 2.1 + PKCE auth via Doorkeeper."
-  spec.homepage = "https://github.com/pauloancheta/rails-mcp"
+  spec.homepage = "https://github.com/pauloancheta/activerecord-mcp"
   spec.license = "MIT"
   spec.required_ruby_version = ">= 3.1.0"
 
