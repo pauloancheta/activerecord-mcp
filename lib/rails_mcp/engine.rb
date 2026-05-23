@@ -7,6 +7,10 @@ module RailsMcp
   class Engine < ::Rails::Engine
     isolate_namespace RailsMcp
 
+    generators do
+      require "generators/rails_mcp/install/install_generator"
+    end
+
     config.middleware.use RailsMcp::Auth::TokenValidator
 
     initializer "rails_mcp.doorkeeper_pkce_check" do

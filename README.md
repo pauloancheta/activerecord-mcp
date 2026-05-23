@@ -62,7 +62,14 @@ Rails.application.routes.draw do
 end
 ```
 
-**3. Restrict which models are accessible** (`config/initializers/rails_mcp.rb`):
+**3. Generate the initializer:**
+
+```bash
+bin/rails generate rails_mcp:install
+```
+
+This creates `config/initializers/rails_mcp.rb` with every option documented and commented out. Edit it to restrict access:
+
 
 ```ruby
 RailsMcp.configure do |config|
