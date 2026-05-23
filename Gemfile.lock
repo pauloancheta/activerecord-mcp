@@ -1,9 +1,9 @@
 PATH
   remote: .
   specs:
-    rails-mcp (0.1.0)
+    activerecord-mcp (0.1.0)
       doorkeeper (~> 5.6)
-      mcp
+      mcp (~> 0.17)
       rails (>= 7.0)
 
 GEM
@@ -292,10 +292,10 @@ PLATFORMS
   x86_64-linux
 
 DEPENDENCIES
+  activerecord-mcp!
   minitest (~> 5.0)
   minitest-reporters
   rails (>= 7.0)
-  rails-mcp!
   rubocop (~> 1.21)
   rubocop-discourse
   rubocop-minitest
