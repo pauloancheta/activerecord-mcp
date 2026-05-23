@@ -1,6 +1,6 @@
 # Authentication
 
-rails-mcp uses [Doorkeeper](https://github.com/doorkeeper-gem/doorkeeper) for OAuth 2.1 server-side authentication with PKCE. Every request to the MCP endpoint requires a valid Bearer token.
+activerecord-mcp uses [Doorkeeper](https://github.com/doorkeeper-gem/doorkeeper) for OAuth 2.1 server-side authentication with PKCE. Every request to the MCP endpoint requires a valid Bearer token.
 
 ## How it works
 
@@ -17,7 +17,7 @@ Two paths bypass the middleware:
 ```ruby
 # Gemfile
 gem "doorkeeper"
-gem "rails-mcp"
+gem "activerecord-mcp"
 ```
 
 ```bash
@@ -33,7 +33,7 @@ bin/rails db:migrate
 Doorkeeper.configure do
   orm :active_record
 
-  # PKCE S256 is required — rails-mcp warns at boot if this is missing
+  # PKCE S256 is required — activerecord-mcp warns at boot if this is missing
   pkce_code_challenge_methods %w[S256]
 
   resource_owner_authenticator do
@@ -42,7 +42,7 @@ Doorkeeper.configure do
 end
 ```
 
-rails-mcp logs a warning at boot if PKCE S256 is not enabled. It does not raise — Doorkeeper config is owned by the host app.
+activerecord-mcp logs a warning at boot if PKCE S256 is not enabled. It does not raise — Doorkeeper config is owned by the host app.
 
 ### 3. Add routes
 
@@ -105,7 +105,7 @@ curl https://your-app.com/mcp/.well-known/oauth-authorization-server
 | Token expired | `401` | `{"error":"invalid_token"}` |
 | Token lacks required scope | `403` | `{"error":"insufficient_scope"}` |
 
-All `401` responses include a `WWW-Authenticate: Bearer realm="rails-mcp"` header.
+All `401` responses include a `WWW-Authenticate: Bearer realm="activerecord-mcp"` header.
 
 ## Creating tokens (development)
 

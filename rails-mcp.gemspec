@@ -3,7 +3,7 @@
 require_relative "lib/rails_mcp/version"
 
 Gem::Specification.new do |spec|
-  spec.name = "rails-mcp"
+  spec.name = "activerecord-mcp"
   spec.version = RailsMcp::VERSION
   spec.authors = ["Paulo Ancheta"]
   spec.email = ["paulo.ancheta@gmail.com"]

@@ -1,6 +1,6 @@
 # Configuration
 
-Configure rails-mcp in an initializer. All settings have defaults — you only need to set what you want to change.
+Configure activerecord-mcp in an initializer. All settings have defaults — you only need to set what you want to change.
 
 ```ruby
 # config/initializers/rails_mcp.rb

@@ -1,4 +1,4 @@
-# rails-mcp
+# activerecord-mcp
 
 [![CI](https://github.com/pauloancheta/rails-mcp/actions/workflows/main.yml/badge.svg)](https://github.com/pauloancheta/rails-mcp/actions/workflows/main.yml)
 
@@ -8,7 +8,7 @@ Drop it into any Rails app and your AI tools can introspect your ActiveRecord mo
 
 Built on the [official MCP Ruby SDK](https://github.com/modelcontextprotocol/ruby-sdk) and mounted as a Rails Engine, it shares Puma's thread pool and your existing connection pool. Nothing extra to run.
 
-## Why rails-mcp
+## Why activerecord-mcp
 
 - **Read-only by default** — queries run against a named database role (`:reading`); your write replica or primary is never touched unless you configure it
 - **No raw SQL** — all queries go through hash conditions validated against actual column names; no string interpolation reaches the database
@@ -29,7 +29,7 @@ Built on the [official MCP Ruby SDK](https://github.com/modelcontextprotocol/rub
 Add to your Gemfile:
 
 ```ruby
-gem "rails-mcp"
+gem "activerecord-mcp"
 gem "doorkeeper"
 ```
 

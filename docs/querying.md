@@ -1,6 +1,6 @@
 # Querying
 
-rails-mcp exposes five built-in tools. All queries go through hash conditions validated against actual column names — no raw SQL is accepted at any layer.
+activerecord-mcp exposes five built-in tools. All queries go through hash conditions validated against actual column names — no raw SQL is accepted at any layer.
 
 ## Default fields
 

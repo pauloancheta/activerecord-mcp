@@ -42,7 +42,7 @@ module RailsMcp
         body = { error: "invalid_token", error_description: message }.to_json
         [
           401,
-          { "Content-Type" => "application/json", "WWW-Authenticate" => 'Bearer realm="rails-mcp"' },
+          { "Content-Type" => "application/json", "WWW-Authenticate" => 'Bearer realm="activerecord-mcp"' },
           [body]
         ]
       end
@@ -53,7 +53,7 @@ module RailsMcp
           403,
           {
             "Content-Type" => "application/json",
-            "WWW-Authenticate" => "Bearer realm=\"rails-mcp\", error=\"insufficient_scope\", scope=\"#{scope}\""
+            "WWW-Authenticate" => "Bearer realm=\"activerecord-mcp\", error=\"insufficient_scope\", scope=\"#{scope}\""
           },
           [body]
         ]

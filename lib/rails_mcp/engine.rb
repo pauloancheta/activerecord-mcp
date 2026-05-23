@@ -19,7 +19,7 @@ module RailsMcp
 
         methods = Doorkeeper.configuration.pkce_code_challenge_methods
         unless Array(methods).include?("S256")
-          Rails.logger.warn "[rails-mcp] Doorkeeper PKCE S256 is not enabled. " \
+          Rails.logger.warn "[activerecord-mcp] Doorkeeper PKCE S256 is not enabled. " \
                             "Add `pkce_code_challenge_methods %w[S256]` to your Doorkeeper config."
         end
       end

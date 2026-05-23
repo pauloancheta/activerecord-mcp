@@ -40,7 +40,7 @@ module RailsMcp
 
       def build_transport
         mcp_server = MCP::Server.new(
-          name: "rails-mcp",
+          name: "activerecord-mcp",
           version: RailsMcp::VERSION,
           tools: all_tools
         )
