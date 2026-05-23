@@ -1,31 +1,174 @@
-# Rails::Mcp
+# rails-mcp
 
-TODO: Delete this and the text below, and describe your gem
+A Rails Engine that adds an [MCP (Model Context Protocol)](https://modelcontextprotocol.io) server to your app. Built on the [official MCP Ruby SDK](https://github.com/modelcontextprotocol/ruby-sdk), it exposes safe, role-aware ActiveRecord query tools over **Streamable HTTP** — no SSE, no standalone process, no extra memory footprint.
 
-Welcome to your new gem! In this directory, you'll find the files you need to be able to package up your Ruby library into a gem. Put your Ruby code in the file `lib/rails/mcp`. To experiment with that code, run `bin/console` for an interactive prompt.
+Because it mounts as a Rails Engine, MCP requests share Puma's thread pool and ActiveRecord connection pool with the rest of your app.
+
+## Why not fast-mcp?
+
+fast-mcp uses SSE transport, which holds a Puma thread open for the lifetime of each client connection. With 5 Puma threads and 5 MCP clients connected, your app is saturated. SSE was [deprecated in the MCP spec](https://modelcontextprotocol.io/specification/2025-11-25/basic/transports) in March 2025 in favour of Streamable HTTP, which uses normal short-lived POST requests.
+
+## Features
+
+- **Streamable HTTP transport** — standard POST requests, no persistent connections
+- **5 built-in database tools** — query, find, count, list, and describe AR models
+- **No raw SQL** — all queries go through hash conditions validated against actual column names
+- **Configurable database role** — defaults to `:reading`, works with any named role (`connected_to`)
+- **Default field filtering** — returns only `id`, `created_at`, `updated_at` unless more fields are requested
+- **Model allowlist / denylist** — restrict which models are accessible
+- **OAuth 2.1 + PKCE** — server-side auth via [Doorkeeper](https://github.com/doorkeeper-gem/doorkeeper)
+- **Custom tool DSL** — register your own MCP tools alongside the built-ins
 
 ## Installation
 
-TODO: Replace `UPDATE_WITH_YOUR_GEM_NAME_PRIOR_TO_RELEASE_TO_RUBYGEMS_ORG` with your gem name right after releasing it to RubyGems.org. Please do not do it earlier due to security reasons. Alternatively, replace this section with instructions to install your gem from git if you don't plan to release to RubyGems.org.
+Add to your Gemfile:
 
-Install the gem and add to the application's Gemfile by executing:
+```ruby
+gem "rails-mcp"
+gem "doorkeeper"
+```
 
-    $ bundle add UPDATE_WITH_YOUR_GEM_NAME_PRIOR_TO_RELEASE_TO_RUBYGEMS_ORG
+## Setup
 
-If bundler is not being used to manage dependencies, install the gem by executing:
+**1. Configure Doorkeeper** (`config/initializers/doorkeeper.rb`):
 
-    $ gem install UPDATE_WITH_YOUR_GEM_NAME_PRIOR_TO_RELEASE_TO_RUBYGEMS_ORG
+```ruby
+Doorkeeper.configure do
+  orm :active_record
+  pkce_code_challenge_methods %w[S256]
+  # ... rest of your Doorkeeper config
+end
+```
 
-## Usage
+Run Doorkeeper's migrations if you haven't already:
 
-TODO: Write usage instructions here
+```bash
+bin/rails generate doorkeeper:install
+bin/rails generate doorkeeper:migration
+bin/rails db:migrate
+```
+
+**2. Mount the engine** (`config/routes.rb`):
+
+```ruby
+Rails.application.routes.draw do
+  use_doorkeeper
+  mount RailsMcp::Engine, at: "/mcp"
+end
+```
+
+**3. Configure rails-mcp** (optional, `config/initializers/rails_mcp.rb`):
+
+```ruby
+RailsMcp.configure do |config|
+  config.database_role  = :reading   # default — any named role works
+  config.default_fields = [:id, :created_at, :updated_at]  # default
+  config.allowed_models = %w[User Post Order]  # empty = all models
+  config.denied_models  = %w[AdminUser]
+  config.max_limit      = 100        # max records per query
+end
+```
+
+## Built-in Database Tools
+
+All tools return only `id`, `created_at`, and `updated_at` by default. Pass `fields` to get more columns.
+
+### `list_models`
+Lists all accessible ActiveRecord model names.
+
+```json
+{ "name": "list_models", "arguments": {} }
+```
+
+### `describe_model`
+Returns columns, types, and associations for a model.
+
+```json
+{ "name": "describe_model", "arguments": { "model": "User" } }
+```
+
+### `query_records`
+Queries records with hash conditions. No raw SQL accepted.
+
+```json
+{
+  "name": "query_records",
+  "arguments": {
+    "model": "User",
+    "conditions": { "active": true },
+    "fields": ["id", "name", "email"],
+    "limit": 10,
+    "offset": 0,
+    "order": "created_at DESC"
+  }
+}
+```
+
+### `find_record`
+Finds a single record by primary key.
+
+```json
+{
+  "name": "find_record",
+  "arguments": { "model": "User", "id": 42, "fields": ["name", "email"] }
+}
+```
+
+### `count_records`
+Counts records matching hash conditions.
+
+```json
+{
+  "name": "count_records",
+  "arguments": { "model": "User", "conditions": { "active": true } }
+}
+```
+
+## Custom Tools
+
+Register additional tools in an initializer **before the first request**:
+
+```ruby
+RailsMcp::Server.tool("business_summary") do
+  description "Return a summary of today's orders"
+  parameter :date, type: :string, description: "ISO 8601 date", required: true
+
+  call do |params, _server_context|
+    date   = Date.parse(params[:date])
+    orders = Order.where(created_at: date.all_day)
+    { count: orders.count, total: orders.sum(:amount_cents) }
+  end
+end
+```
+
+## Authentication
+
+Every request to `/mcp` must include a valid Doorkeeper Bearer token:
+
+```
+Authorization: Bearer <access_token>
+```
+
+The `/.well-known/oauth-authorization-server` endpoint is public and returns OAuth 2.1 discovery metadata pointing to your Doorkeeper endpoints.
+
+## Architecture
+
+```
+POST /mcp
+  └─> TokenValidator (Rack middleware — validates Doorkeeper Bearer token)
+        └─> MCP::Server::Transports::StreamableHTTPTransport (official SDK)
+              └─> MCP::Server (JSON-RPC dispatch)
+                    └─> RailsMcp built-in tools
+                          └─> RoleProxy → QueryBuilder → ActiveRecord
+```
 
 ## Development
 
-After checking out the repo, run `bin/setup` to install dependencies. Then, run `rake test` to run the tests. You can also run `bin/console` for an interactive prompt that will allow you to experiment.
-
-To install this gem onto your local machine, run `bundle exec rake install`. To release a new version, update the version number in `version.rb`, and then run `bundle exec rake release`, which will create a git tag for the version, push git commits and the created tag, and push the `.gem` file to [rubygems.org](https://rubygems.org).
+```bash
+bin/setup          # install dependencies
+bundle exec rake test    # run tests (45 tests, 89 assertions)
+```
 
 ## Contributing
 
-Bug reports and pull requests are welcome on GitHub at https://github.com/[USERNAME]/rails-mcp.
+Bug reports and pull requests welcome at https://github.com/pauloancheta/rails-mcp.
