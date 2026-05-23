@@ -24,25 +24,27 @@ module RailsMcp
 
           raise Database::ModelResolver::UnknownModel, "#{model} with id=#{id} not found" unless record
 
-          resolved_fields = resolve_fields(Array(fields), klass)
-          validate_fields!(resolved_fields, klass)
-          resolved_fields.each_with_object({}) { |f, h| h[f] = record.public_send(f) }
+          # Pre-query: resolve and validate fields against the same allowed set QueryBuilder uses
+          allowed  = allowed_columns(klass)
+          resolved = Array(fields).map(&:to_s)
+          resolved = RailsMcp.configuration.default_fields.map(&:to_s) & allowed if resolved.empty?
+
+          unknown = resolved - allowed
+          raise Database::QueryBuilder::Error, "Unknown field(s): #{unknown.join(", ")}" if unknown.any?
+
+          # Post-query: strip denied columns from output regardless of how resolved was built
+          resolved
+            .reject { |f| RailsMcp.configuration.column_denied?(f) }
+            .each_with_object({}) { |f, h| h[f] = record.public_send(f) }
         end
         MCP::Tool::Response.new([{ type: "text", text: result.to_json }])
       end
 
-      def self.resolve_fields(requested, klass)
-        return requested unless requested.empty?
-
-        RailsMcp.configuration.default_fields.map(&:to_s) & klass.column_names
+      def self.allowed_columns(klass)
+        Database::ColumnPolicy.allowed_for(klass)
       end
 
-      def self.validate_fields!(fields, klass)
-        unknown = fields.map(&:to_s) - klass.column_names
-        raise Database::QueryBuilder::Error, "Unknown field(s): #{unknown.join(", ")}" if unknown.any?
-      end
-
-      private_class_method :resolve_fields, :validate_fields!
+      private_class_method :allowed_columns
     end
   end
 end

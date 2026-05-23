@@ -33,16 +33,7 @@ module RailsMcp
       private
 
       def column_names
-        @column_names ||= begin
-          schema = RailsMcp.schema_config
-          cols = if schema
-            auto = RailsMcp.configuration.default_fields.map(&:to_s) & @klass.column_names
-            (schema.allowed_columns(@klass.name) + auto).uniq
-          else
-            @klass.column_names
-          end
-          cols.reject { |col| RailsMcp.configuration.column_denied?(col) }
-        end
+        @column_names ||= ColumnPolicy.allowed_for(@klass)
       end
 
       def resolved_fields
@@ -87,9 +78,9 @@ module RailsMcp
       end
 
       def serialize(record)
-        resolved_fields.each_with_object({}) do |field, hash|
-          hash[field] = record.public_send(field)
-        end
+        resolved_fields
+          .reject { |field| RailsMcp.configuration.column_denied?(field) }
+          .each_with_object({}) { |field, hash| hash[field] = record.public_send(field) }
       end
     end
   end
