@@ -1,0 +1,13 @@
+default: &default
+  adapter: sqlite3
+  pool: 5
+  timeout: 5000
+
+test:
+  <<: *default
+  database: ":memory:"
+
+# Alias reading role to the same connection so connected_to(:reading) works in tests
+test_reading:
+  <<: *default
+  database: ":memory:"
