@@ -6,6 +6,7 @@ module RailsMcp
       class Error < StandardError; end
 
       ALLOWED_ORDER_DIRECTIONS = %w[ASC DESC].freeze
+      SCALAR_TYPES = [String, Integer, Float, TrueClass, FalseClass, NilClass].freeze
 
       def initialize(klass, conditions: {}, fields: [], limit: nil, offset: 0, order: nil)
         @klass      = klass
@@ -22,7 +23,7 @@ module RailsMcp
         validate_order!
 
         scope = @klass.where(@conditions)
-        scope = scope.select(resolved_fields)
+        scope = scope.select(resolved_fields.map { |f| @klass.arel_table[f] })
         scope = scope.limit(@limit)
         scope = scope.offset(@offset) if @offset > 0
         scope = scope.order(safe_order_clause) if @order
@@ -52,6 +53,9 @@ module RailsMcp
       def validate_conditions!
         unknown = @conditions.keys - column_names
         raise Error, "Unknown column(s) in conditions: #{unknown.join(", ")}" if unknown.any?
+
+        invalid = @conditions.reject { |_, v| valid_condition_value?(v) }
+        raise Error, "Invalid condition value(s) for: #{invalid.keys.join(", ")} (scalars and arrays only)" if invalid.any?
       end
 
       def validate_fields!
@@ -79,8 +83,17 @@ module RailsMcp
 
       def serialize(record)
         resolved_fields
+          .select { |field| column_names.include?(field) }
           .reject { |field| RailsMcp.configuration.column_denied?(field) }
           .each_with_object({}) { |field, hash| hash[field] = record.public_send(field) }
+      end
+
+      def valid_condition_value?(value)
+        if value.is_a?(Array)
+          value.all? { |v| SCALAR_TYPES.any? { |t| v.is_a?(t) } }
+        else
+          SCALAR_TYPES.any? { |t| value.is_a?(t) }
+        end
       end
     end
   end

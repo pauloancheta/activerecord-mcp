@@ -123,6 +123,20 @@ class DeniedColumnsTest < ActiveSupport::TestCase
     refute_includes col_names, "email"
   end
 
+  # --- count oracle blocked ---
+
+  test "count_records cannot use denied column as condition" do
+    RailsMcp.configuration.denied_columns = ["email"]
+    err = assert_raises(RailsMcp::Database::QueryBuilder::Error) do
+      RailsMcp::Tools::CountRecords.call(
+        model: "User",
+        conditions: { "email" => "alice@example.com" },
+        server_context: {}
+      )
+    end
+    assert_match "Unknown column(s)", err.message
+  end
+
   # --- non-denied columns are unaffected ---
 
   test "non-denied columns are still accessible" do

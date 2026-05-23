@@ -85,6 +85,25 @@ class QueryBuilderTest < ActiveSupport::TestCase
     assert_match(/Unknown order column/, err.message)
   end
 
+  test "hash value in conditions is rejected" do
+    err = assert_raises(RailsMcp::Database::QueryBuilder::Error) do
+      build(User, conditions: { "name" => { "starts_with" => "Al" } }).execute
+    end
+    assert_match "Invalid condition value(s)", err.message
+  end
+
+  test "array of scalars in conditions is accepted" do
+    results = build(User, conditions: { "name" => ["Alice", "Bob"] }, fields: ["name"]).execute
+    assert_equal 2, results.length
+  end
+
+  test "array containing hash in conditions is rejected" do
+    err = assert_raises(RailsMcp::Database::QueryBuilder::Error) do
+      build(User, conditions: { "name" => [{ "starts_with" => "Al" }] }).execute
+    end
+    assert_match "Invalid condition value(s)", err.message
+  end
+
   private
 
   def build(klass, **opts)

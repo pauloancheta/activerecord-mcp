@@ -26,6 +26,29 @@ class CountRecordsToolTest < ActiveSupport::TestCase
     end
   end
 
+  test "raises on denied column in conditions" do
+    RailsMcp.configuration.denied_columns = ["email"]
+    err = assert_raises(RailsMcp::Database::QueryBuilder::Error) do
+      call(model: "User", conditions: { "email" => "alice@example.com" })
+    end
+    assert_match "Unknown column(s)", err.message
+  end
+
+  test "raises on hash condition value" do
+    err = assert_raises(RailsMcp::Database::QueryBuilder::Error) do
+      call(model: "User", conditions: { "name" => { "starts_with" => "Al" } })
+    end
+    assert_match "Invalid condition value(s)", err.message
+  end
+
+  test "count oracle blocked for denied column" do
+    RailsMcp.configuration.denied_columns = [/password/i]
+    err = assert_raises(RailsMcp::Database::QueryBuilder::Error) do
+      call(model: "User", conditions: { "password_digest" => "$2a$12$abc" })
+    end
+    assert_match "Unknown column(s)", err.message
+  end
+
   private
 
   def call(**args)
