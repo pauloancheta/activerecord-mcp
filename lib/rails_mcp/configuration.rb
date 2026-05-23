@@ -6,7 +6,8 @@ module RailsMcp
                   :default_fields,
                   :allowed_models,
                   :denied_models,
-                  :max_limit
+                  :max_limit,
+                  :schema_file
 
     def initialize
       @database_role  = :reading
@@ -14,6 +15,7 @@ module RailsMcp
       @allowed_models = []
       @denied_models  = []
       @max_limit      = 100
+      @schema_file    = nil
     end
   end
 end

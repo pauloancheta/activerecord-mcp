@@ -1,0 +1,8 @@
+User:
+  - id
+  - name
+  - created_at
+Post:
+  - id
+  - title
+  - created_at

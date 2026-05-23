@@ -66,8 +66,37 @@ RailsMcp.configure do |config|
   config.allowed_models = %w[User Post Order]  # empty = all models
   config.denied_models  = %w[AdminUser]
   config.max_limit      = 100        # max records per query
+
+  # Optional: point to a YAML file that defines per-model column allowlists.
+  # When set, this takes precedence over allowed_models / denied_models.
+  config.schema_file = Rails.root.join("config/rails_mcp.yml")
 end
 ```
+
+## Schema File
+
+For fine-grained control, define exactly which models and columns the MCP can access in a YAML file:
+
+```yaml
+# config/rails_mcp.yml
+User:
+  - id
+  - name
+  - email
+  - created_at
+  - updated_at
+Post:
+  - id
+  - title
+  - created_at
+  - updated_at
+```
+
+When `schema_file` is configured:
+
+- Only models listed in the file are accessible — `allowed_models` and `denied_models` are ignored
+- Each model's column list is the only set of columns that can appear in `fields`, `conditions`, or `order`
+- Requesting a column not in the list raises an error and returns no data
 
 ## Built-in Database Tools
 

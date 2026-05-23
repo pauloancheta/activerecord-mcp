@@ -33,7 +33,10 @@ module RailsMcp
       private
 
       def column_names
-        @column_names ||= @klass.column_names
+        @column_names ||= begin
+          schema = RailsMcp.schema_config
+          schema ? schema.allowed_columns(@klass.name) : @klass.column_names
+        end
       end
 
       def resolved_fields

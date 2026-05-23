@@ -2,6 +2,7 @@
 
 require "rails_mcp/version"
 require "rails_mcp/configuration"
+require "rails_mcp/schema_config"
 require "rails_mcp/database/role_proxy"
 require "rails_mcp/database/model_resolver"
 require "rails_mcp/database/query_builder"
@@ -25,8 +26,15 @@ module RailsMcp
       @configuration ||= Configuration.new
     end
 
+    def schema_config
+      return nil unless configuration.schema_file
+
+      @schema_config ||= SchemaConfig.new(configuration.schema_file)
+    end
+
     def reset_configuration!
       @configuration = Configuration.new
+      @schema_config = nil
     end
   end
 end

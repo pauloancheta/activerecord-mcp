@@ -38,6 +38,10 @@ module RailsMcp
       end
 
       private_class_method def self.accessible?(klass)
+        # Schema file takes precedence over allowed_models/denied_models
+        schema = RailsMcp.schema_config
+        return schema.accessible?(klass.name) if schema
+
         config = RailsMcp.configuration
         name   = klass.name
 
