@@ -8,6 +8,7 @@ module RailsMcp
                   :denied_models,
                   :denied_columns,
                   :max_limit,
+                  :max_offset,
                   :schema_file,
                   :scope
 
@@ -18,6 +19,7 @@ module RailsMcp
       @denied_models  = []
       @denied_columns = []
       @max_limit      = 100
+      @max_offset     = 10_000
       @schema_file    = nil
       @scope          = "mcp"
     end

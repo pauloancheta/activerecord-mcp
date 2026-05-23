@@ -13,7 +13,7 @@ module RailsMcp
         @conditions = conditions.transform_keys(&:to_s)
         @fields     = Array(fields).map(&:to_s)
         @limit      = clamp_limit(limit)
-        @offset     = offset.to_i
+        @offset     = [offset.to_i, 0].max
         @order      = order
       end
 
@@ -21,6 +21,7 @@ module RailsMcp
         validate_conditions!
         validate_fields!
         validate_order!
+        validate_offset!
 
         scope = @klass.where(@conditions)
         scope = scope.select(resolved_fields.map { |f| @klass.arel_table[f] })
@@ -61,6 +62,11 @@ module RailsMcp
       def validate_fields!
         unknown = @fields - column_names
         raise Error, "Unknown field(s): #{unknown.join(", ")}" if unknown.any?
+      end
+
+      def validate_offset!
+        max = RailsMcp.configuration.max_offset
+        raise Error, "Offset #{@offset} exceeds maximum allowed offset of #{max}" if @offset > max
       end
 
       def validate_order!

@@ -97,10 +97,22 @@ See [Advanced Usage → Explicit column deny](advanced.md#explicit-column-deny) 
 
 **Default:** `100`
 
-Maximum number of records any `query_records` call can return. Client-supplied `limit` values are capped to this. Nil or zero limits also resolve to this value.
+Maximum number of records any `query_records` call can return. Client-supplied `limit` values are silently capped to this. Nil or zero limits also resolve to this value.
 
 ```ruby
 config.max_limit = 50
+```
+
+---
+
+### `max_offset`
+
+**Default:** `10_000`
+
+Maximum `offset` value accepted by `query_records`. Unlike `max_limit`, exceeding this raises an error rather than silently clamping — a clamped offset would return the wrong page without telling the caller. Negative offsets are silently treated as `0`.
+
+```ruby
+config.max_offset = 5_000
 ```
 
 ---

@@ -72,8 +72,8 @@ Queries records with hash conditions.
 | `model` | string | yes | Model class name, e.g. `"User"` |
 | `conditions` | object | no | Column/value pairs for WHERE clause |
 | `fields` | array of strings | no | Columns to return (defaults to id + timestamps) |
-| `limit` | integer | no | Max records; capped at `max_limit` config |
-| `offset` | integer | no | Records to skip |
+| `limit` | integer | no | Max records; silently capped at `max_limit` (default 100) |
+| `offset` | integer | no | Records to skip; raises an error if it exceeds `max_offset` (default 10,000) |
 | `order` | string | no | `"column_name ASC"` or `"column_name DESC"` |
 
 ```json

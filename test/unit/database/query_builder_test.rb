@@ -97,6 +97,26 @@ class QueryBuilderTest < ActiveSupport::TestCase
     assert_equal 2, results.length
   end
 
+  test "raises when offset exceeds max_offset" do
+    RailsMcp.configuration.max_offset = 500
+    err = assert_raises(RailsMcp::Database::QueryBuilder::Error) do
+      build(User, offset: 501).execute
+    end
+    assert_match "exceeds maximum allowed offset", err.message
+    assert_match "500", err.message
+  end
+
+  test "offset at exactly max_offset is accepted" do
+    RailsMcp.configuration.max_offset = 500
+    assert_nothing_raised { build(User, offset: 500).execute }
+  end
+
+  test "negative offset is treated as zero" do
+    results_zero    = build(User, fields: ["name"]).execute
+    results_negative = build(User, fields: ["name"], offset: -10).execute
+    assert_equal results_zero, results_negative
+  end
+
   test "array containing hash in conditions is rejected" do
     err = assert_raises(RailsMcp::Database::QueryBuilder::Error) do
       build(User, conditions: { "name" => [{ "starts_with" => "Al" }] }).execute

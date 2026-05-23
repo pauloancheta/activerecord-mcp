@@ -14,8 +14,8 @@ module RailsMcp
           conditions: { type: "object",  description: "Hash of column => value pairs, e.g. {\"active\": true}" },
           fields:     { type: "array",   description: "Columns to return. Defaults to [id, created_at, updated_at]",
                         items: { type: "string" } },
-          limit:      { type: "integer", description: "Max records to return (capped at max_limit config)" },
-          offset:     { type: "integer", description: "Number of records to skip" },
+          limit:      { type: "integer", description: "Max records to return (capped at max_limit, default 100)" },
+          offset:     { type: "integer", description: "Number of records to skip (must not exceed max_offset, default 10000)" },
           order:      { type: "string",  description: "Order clause, e.g. \"created_at DESC\"" }
         },
         required: ["model"]
