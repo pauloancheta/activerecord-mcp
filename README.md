@@ -1,5 +1,7 @@
 # rails-mcp
 
+[![CI](https://github.com/pauloancheta/rails-mcp/actions/workflows/main.yml/badge.svg)](https://github.com/pauloancheta/rails-mcp/actions/workflows/main.yml)
+
 The read-only MCP server Rails developers have been looking for.
 
 Drop it into any Rails app and your AI tools can introspect your ActiveRecord models and query your database instantly — no standalone process, no raw SQL, no credentials handed to a client. By default every query runs against a read-only database role, so production data stays safe. If you need writes, swap in any role your app already has.
