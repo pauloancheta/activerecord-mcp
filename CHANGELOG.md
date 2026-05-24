@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-05-23
+
+### Fixed
+
+- `describe_model` now routes column and association output through `ColumnPolicy`, so `schema_file` allowlists are correctly respected (previously all columns were exposed regardless of allowlist)
+- Associations pointing to denied or inaccessible models are now filtered from `describe_model` output
+- Auth failures (invalid token, insufficient scope) are now logged via `Rails.logger.warn` with request method, path, client IP, and rejection reason
+
 ## [0.1.0] - 2026-05-23
 
 ### Added
