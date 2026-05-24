@@ -135,3 +135,63 @@ end
 ### Registration timing
 
 The MCP server is memoized on first use. Registering a tool after the server has been built has no effect. All `RailsMcp::Server.tool` calls must complete before the first request reaches the engine. Rails initializers run before the server is built, so they are the correct place.
+
+---
+
+## Value-based access control
+
+The built-in tools control *which models* and *which columns* are visible. Sometimes you need finer control: restricting which **values** a caller can query, or scoping queries to a fixed subset of rows. The custom tool DSL is the right tool for both cases.
+
+### Allowlisted key access
+
+A common pattern is a `settings` table with a `key` column and a `value` column. The built-in tools would let any authenticated caller query any key — including secrets stored alongside innocuous settings. A custom tool enforces an explicit allowlist:
+
+```ruby
+RailsMcp::Server.tool("get_setting") do
+  description "Return a whitelisted application setting"
+
+  parameter :key, type: :string, required: true,
+                  description: "Setting key. Allowed: theme, locale, timezone"
+
+  call do |params, _server_context|
+    allowed = %w[theme locale timezone date_format]
+    raise "Setting '#{params[:key]}' is not accessible" unless allowed.include?(params[:key])
+
+    row = Setting.find_by(key: params[:key])
+    raise "Setting not found" unless row
+
+    { key: row.key, value: row.value }
+  end
+end
+```
+
+The built-in `query_records` tool can be disabled for `Setting` entirely by adding it to `denied_models`:
+
+```ruby
+config.denied_models = ["Setting"]
+```
+
+Now the only way to read settings is through `get_setting`, and it only returns keys on the allowlist.
+
+### Fixed-scope row access
+
+When a column like `role` determines visibility — for example, MCP callers should only ever see customers, never admins — hard-code the scope in a custom tool rather than relying on the caller to pass the right condition:
+
+```ruby
+RailsMcp::Server.tool("list_customers") do
+  description "List users with role=customer. Admin and internal users are never returned."
+
+  parameter :limit, type: :integer, description: "Max records (default 20)"
+
+  call do |params, _server_context|
+    limit = [params[:limit].to_i.nonzero? || 20, 100].min
+    User.where(role: "customer")
+        .select(:id, :email, :name, :created_at)
+        .limit(limit)
+        .map { |u| u.slice("id", "email", "name", "created_at") }
+  end
+end
+```
+
+Combined with `denied_columns = [/role/i]`, the `role` column is invisible in all built-in tool output *and* the custom tool never exposes non-customer rows.
+
